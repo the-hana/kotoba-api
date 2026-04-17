@@ -7,8 +7,16 @@ class User < ApplicationRecord
 
   JLPT_LEVELS = %w[n5 n4 n3 n2 n1].freeze
 
+  before_save :downcase_email
+
   validates :email, presence: true, uniqueness: { case_sensitive: false },
                     format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :nickname, presence: true, length: { maximum: 30 }
   validates :target_level, inclusion: { in: JLPT_LEVELS }
+
+  private
+
+  def downcase_email
+    self.email = email.downcase
+  end
 end

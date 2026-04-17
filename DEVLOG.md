@@ -7,6 +7,20 @@
 
 ## 2026-04-17
 
+### JWT認証APIの実装
+
+- `POST /api/v1/auth/signup` / `login` / `refresh` / `DELETE logout` の4エンドポイントを実装
+- `lib/json_web_token.rb` にJWT encode/decode ユーティリティを切り出し (access: 15分 / refresh: 7日)
+- refresh tokenはDB側でbcryptハッシュとして保存し、logout時にnil更新でrevoke
+- `/auth/refresh` はaccess tokenの有効期限切れを許容してデコードし、user_idを取得する設計を採用
+  — フロントが期限切れのtokenをそのままヘッダーに乗せてrefreshできるようにするため
+- CORS: `CORS_ORIGINS` 環境変数で本番/開発を切り替え。デフォルト `http://localhost:5173`
+- RSpec request spec 10件すべてパス
+
+---
+
+## 2026-04-17
+
 ### DBスキーマ・Modelの実装とシードデータの投入
 
 - 全テーブルのMigrationを作成・実行（users, words, word_days, daily_stories, daily_story_words, ai_contents, word_bookmarks, study_sessions）

@@ -66,3 +66,34 @@ StudySession user_id (unique), word_day_id (FK → word_days.id), updated_at (�
 - 모든 새 기능에 RSpec 테스트 필수
 - 실행: `bundle exec rspec`
 - 테스트 데이터: Factory Bot 사용
+
+### テストガイドライン
+
+**APIを追加するケース**
+
+1. `doc/openapi.yml` に追加するAPIの仕様を書く
+2. `spec/requests/` 配下にテストファイルを追加する
+3. 各テストで以下の4点をアサーションする:
+   - HTTP ステータス
+   - DB の状態（件数・フィールド値）
+   - レスポンス構造（`assert_response_schema_confirm`）
+   - レスポンスの値
+
+```ruby
+it do
+  # 1. HTTPステータスのアサーション
+  expect(response.status).to eq 200
+  # 2. DBのアサーション
+  expect(User.count).to eq 1
+  # 3. 構造のアサーション
+  assert_response_schema_confirm(200)
+  # 4. 値のアサーション
+  expect(response.parsed_body["access_token"]).to be_present
+end
+```
+
+**テストデータの独立性**
+
+- `let!` は使わず `before` ブロックで明示的に定義する
+- テストケース間でデータを使い回さない
+- 動的に値が変わりうる場合は `let` も使わず `before` 内で直接作成する
