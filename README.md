@@ -1,14 +1,24 @@
-# kotoba-api
+# README
 
-Backend API server for kotoba-ai — an AI-powered language learning service.
+This README would normally document whatever steps are necessary to get the
+application up and running.
 
-## Stack
+Things you may want to cover:
 
-- To be defined
+* Ruby version
 
-## Getting Started
+* System dependencies
 
-```bash
-# Install dependencies
-# Run dev server
-```
+* Configuration
+
+* Database creation
+
+* Database initialization
+
+* How to run the test suite
+
+* Services (job queues, cache servers, search engines, etc.)
+
+* Deployment instructions
+
+* ...
