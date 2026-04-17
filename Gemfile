@@ -13,7 +13,7 @@ gem "puma", ">= 5.0"
 gem "bcrypt", "~> 3.1.7"
 
 # JWT認証
-gem "jwt", "~> 2.9"
+gem "jwt", "~> 3.1"
 
 # CSVパース (Ruby 3.4以降で標準ライブラリから分離されるため明示)
 gem "csv", "~> 3.3"
