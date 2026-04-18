@@ -9,6 +9,7 @@ Rails.application.routes.draw do
         post :refresh
         delete :logout
       end
+      resources :words, only: %i[index show]
     end
   end
 end

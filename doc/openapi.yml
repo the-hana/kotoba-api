@@ -136,6 +136,94 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/words:
+    get:
+      summary: 単語一覧取得
+      tags: [Words]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jlpt_level
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [n5, n4, n3, n2, n1]
+        - name: day_number
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 単語一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Word"
+                  error:
+                    nullable: true
+        "400":
+          description: jlpt_level未指定
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/words/{id}:
+    get:
+      summary: 単語詳細取得（AI例文付き）
+      tags: [Words]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: 単語詳細
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/WordDetail"
+                  error:
+                    nullable: true
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: 単語が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -160,6 +248,37 @@ components:
         error:
           type: "null"
 
+    Word:
+      type: object
+      properties:
+        id:
+          type: integer
+        japanese:
+          type: string
+        hiragana:
+          type: string
+        korean:
+          type: string
+        jlpt_level:
+          type: string
+          enum: [n5, n4, n3, n2, n1]
+        bookmarked:
+          type: boolean
+
+    WordDetail:
+      allOf:
+        - $ref: "#/components/schemas/Word"
+        - type: object
+          properties:
+            ai_content:
+              nullable: true
+              type: object
+              properties:
+                example_sentence:
+                  type: string
+                example_sentence_korean:
+                  type: string
+
     ErrorResponse:
       type: object
       properties:
@@ -167,7 +286,7 @@ components:
           type: boolean
           example: false
         data:
-          type: "null"
+          nullable: true
         error:
           oneOf:
             - type: string

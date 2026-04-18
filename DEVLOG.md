@@ -7,6 +7,17 @@
 
 ## 2026-04-17
 
+### Words API の実装
+
+- `GET /api/v1/words?jlpt_level=n5&day_number=1` — レベル・DAYフィルタで単語一覧取得
+- `GET /api/v1/words/:id` — 単語詳細（最新AI例文付き）
+- レスポンスにブックマーク状態 (`bookmarked: bool`) を含める設計にした
+  - フロント側でブックマーク状態をキャッシュするより、取得時に一緒に返す方がシンプル
+  - N+1を避けるためブックマークIDをSetで取得してメモリ内で判定
+- `jlpt_level` 未指定は400、存在しないIDは404を返す
+- OpenAPI schema の `ErrorResponse.data` に `nullable: true` を追加（既存の auth spec も恩恵）
+- Factory: `word`, `word_day`, `word_bookmark`, `daily_story`, `ai_content` を追加
+
 ### JWT認証APIの実装
 
 - `POST /api/v1/auth/signup` / `login` / `refresh` / `DELETE logout` の4エンドポイントを実装
