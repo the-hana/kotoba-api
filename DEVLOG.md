@@ -5,6 +5,19 @@
 
 ## 2026-04-19
 
+### ブックマーク一覧 API の追加（GET /api/v1/bookmarks）
+
+- `GET /api/v1/bookmarks`: 認証ユーザーのブックマーク済み単語一覧を返す
+- `?jlpt_level=n5` クエリパラメーターで絞り込み可能。不正値は 400 を返す
+- `has_many :bookmarked_words, through: :word_bookmarks` を利用し、N+1 なしで取得
+
+**設計判断: nested route にせず最上位 resources :bookmarks に index のみ追加**
+- POST/DELETE は `/api/v1/words/:word_id/bookmark` (nested) だが、一覧は word_id を必要としないため最上位が適切
+- 既存 nested route に手を加えず独立させることでルーティングの影響範囲を最小化
+
+**設計判断: bookmarked は常に true 固定**
+- index アクションで返す単語は全て北マーク済みのため、動的チェック不要
+
 ### Study Session API の実装（GET/PUT /api/v1/study_session）
 
 - `GET /api/v1/study_session`: 現在のユーザーの学習セッションを返す。セッション未作成の場合は `data: null` で 200

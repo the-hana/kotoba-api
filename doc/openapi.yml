@@ -262,6 +262,49 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/bookmarks:
+    get:
+      summary: ブックマーク済み単語一覧取得
+      tags: [Bookmarks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: jlpt_level
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [n5, n4, n3, n2, n1]
+      responses:
+        "200":
+          description: ブックマーク済み単語一覧
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Word"
+                  error:
+                    nullable: true
+        "400":
+          description: jlpt_levelが不正
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v1/words/{word_id}/bookmark:
     post:
       summary: 単語をブックマークに追加
