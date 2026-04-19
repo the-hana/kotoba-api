@@ -1,12 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Words", type: :request do
-  # テスト用JWTトークンを生成するヘルパー
-  def auth_headers(user)
-    token = JsonWebToken.encode_access_token(user_id: user.id)
-    { "Authorization" => "Bearer #{token}" }
-  end
-
   describe "GET /api/v1/words" do
     context "正常系: jlpt_level=n5" do
       before do

@@ -24,10 +24,13 @@ module CommitteeHelpers
   end
 end
 
+Dir[Rails.root.join("spec/support/**/*.rb")].each { |f| require f }
+
 RSpec.configure do |config|
   config.include FactoryBot::Syntax::Methods
   config.include Committee::Rails::Test::Methods
   config.include CommitteeHelpers, type: :request
+  config.include AuthHelpers, type: :request
 
   config.fixture_paths = [
     Rails.root.join('spec/fixtures')

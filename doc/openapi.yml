@@ -184,6 +184,74 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/words/{word_id}/bookmark:
+    post:
+      summary: 単語をブックマークに追加
+      tags: [Bookmarks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: word_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: ブックマーク追加成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessNullResponse"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: 単語が見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: すでにブックマーク済み
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: 単語のブックマークを解除
+      tags: [Bookmarks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: word_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: ブックマーク解除成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessNullResponse"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: ブックマークが見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v1/words/{id}:
     get:
       summary: 単語詳細取得（AI例文付き）
@@ -278,6 +346,17 @@ components:
                   type: string
                 example_sentence_korean:
                   type: string
+
+    SuccessNullResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          nullable: true
+        error:
+          nullable: true
 
     ErrorResponse:
       type: object
