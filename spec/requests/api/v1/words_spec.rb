@@ -1,12 +1,6 @@
 require "rails_helper"
 
 RSpec.describe "Api::V1::Words", type: :request do
-  # テスト用JWTトークンを生成するヘルパー
-  def auth_headers(user)
-    token = JsonWebToken.encode_access_token(user_id: user.id)
-    { "Authorization" => "Bearer #{token}" }
-  end
-
   describe "GET /api/v1/words" do
     context "正常系: jlpt_level=n5" do
       before do
@@ -32,7 +26,7 @@ RSpec.describe "Api::V1::Words", type: :request do
         # 4. 値のアサーション
         expect(response.parsed_body["success"]).to be true
         levels = response.parsed_body["data"].map { |w| w["jlpt_level"] }.uniq
-        expect(levels).to eq ["n5"]
+        expect(levels).to eq [ "n5" ]
       end
     end
 

@@ -5,6 +5,21 @@
 
 ---
 
+## 2026-04-19
+
+### Bookmarks API の実装
+
+- `POST /api/v1/words/:word_id/bookmark` — ブックマーク追加（201）
+- `DELETE /api/v1/words/:word_id/bookmark` — ブックマーク解除（200）
+- nested resource として `resources :words` 配下に `resource :bookmark` を追加
+  - singular resource にした理由: 1ユーザー × 1単語のブックマークは常に1件のみのため
+- 重複追加は model の uniqueness バリデーションで422を返す設計
+  - DB の unique index が最終防衛ラインとして機能する
+- `SuccessNullResponse` スキーマを OpenAPI に追加（data/error が nullable な成功レスポンス共通定義）
+- RSpec request spec 7件すべてパス（全体26件パス）
+
+---
+
 ## 2026-04-17
 
 ### Words API の実装
