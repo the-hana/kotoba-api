@@ -9,6 +9,7 @@ Rails.application.routes.draw do
         post :refresh
         delete :logout
       end
+      resources :bookmarks, only: %i[index]
       resources :words, only: %i[index show] do
         resource :bookmark, only: %i[create destroy]
       end
