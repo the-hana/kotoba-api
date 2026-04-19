@@ -34,3 +34,14 @@ end
 
 puts ""
 puts "シード完了: #{Word.count}単語 / #{WordDay.count}DAYエントリ"
+
+# 開発用テストユーザー
+if Rails.env.development?
+  User.find_or_create_by!(email: "test@example.com") do |u|
+    u.nickname = "テストユーザー"
+    u.password = "password123"
+    u.password_confirmation = "password123"
+    u.target_level = "n5"
+  end
+  puts "開発用ユーザー作成: test@example.com / password123"
+end
