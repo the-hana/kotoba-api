@@ -184,6 +184,84 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/study_session:
+    get:
+      summary: 学習セッション取得
+      tags: [StudySession]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: "セッション取得成功（セッション未作成の場合はdata: null）"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    nullable: true
+                    allOf:
+                      - $ref: "#/components/schemas/StudySession"
+                  error:
+                    nullable: true
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      summary: 学習セッション更新（upsert）
+      tags: [StudySession]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [word_day_id]
+              properties:
+                word_day_id:
+                  type: integer
+      responses:
+        "200":
+          description: セッション更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/StudySession"
+                  error:
+                    nullable: true
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: WordDayが見つからない
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v1/words/{word_id}/bookmark:
     post:
       summary: 単語をブックマークに追加
@@ -357,6 +435,20 @@ components:
           nullable: true
         error:
           nullable: true
+
+    StudySession:
+      type: object
+      properties:
+        word_day_id:
+          type: integer
+        jlpt_level:
+          type: string
+          enum: [n5, n4, n3, n2, n1]
+        day_number:
+          type: integer
+        updated_at:
+          type: string
+          format: date-time
 
     ErrorResponse:
       type: object
