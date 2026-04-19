@@ -32,7 +32,7 @@ RSpec.describe "Api::V1::Words", type: :request do
         # 4. 値のアサーション
         expect(response.parsed_body["success"]).to be true
         levels = response.parsed_body["data"].map { |w| w["jlpt_level"] }.uniq
-        expect(levels).to eq ["n5"]
+        expect(levels).to eq [ "n5" ]
       end
     end
 
