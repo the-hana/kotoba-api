@@ -12,6 +12,7 @@ Rails.application.routes.draw do
       resources :words, only: %i[index show] do
         resource :bookmark, only: %i[create destroy]
       end
+      resource :study_session, only: %i[show update]
     end
   end
 end

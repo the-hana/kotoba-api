@@ -16,8 +16,8 @@ module Api
 
       # POST /api/v1/auth/login
       def login
-        user = User.find_by(email: params[:email]&.downcase)
-        if user&.authenticate(params[:password])
+        user = User.find_by(email: login_params[:email]&.downcase)
+        if user&.authenticate(login_params[:password])
           tokens = issue_tokens(user)
           render json: { success: true, data: tokens }
         else
@@ -46,6 +46,14 @@ module Api
         params.permit(:email, :nickname, :password, :password_confirmation, :target_level)
       end
 
+      def login_params
+        params.permit(:email, :password)
+      end
+
+      def refresh_params
+        params.permit(:refresh_token)
+      end
+
       def issue_tokens(user)
         raw_refresh_token = SecureRandom.hex(32)
         user.update!(
@@ -58,7 +66,7 @@ module Api
       end
 
       def find_user_by_refresh_token
-        raw_token = params[:refresh_token]
+        raw_token = refresh_params[:refresh_token]
         raise JWT::DecodeError, "refresh_tokenがありません" if raw_token.blank?
 
         # Authorizationヘッダーのaccess tokenからuser_idを取得（有効期限切れでも許可）
