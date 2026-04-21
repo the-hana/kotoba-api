@@ -46,7 +46,7 @@ RSpec.describe DailyWordSelectorService do
 
       it "最多target_levelの単語を返す" do
         result = described_class.call
-        expect(result.map(&:jlpt_level).uniq).to eq ["n4"]
+        expect(result.map(&:jlpt_level).uniq).to eq [ "n4" ]
       end
     end
 
@@ -57,7 +57,7 @@ RSpec.describe DailyWordSelectorService do
 
       it "n5フォールバックで単語を返す" do
         result = described_class.call
-        expect(result.map(&:jlpt_level).uniq).to eq ["n5"]
+        expect(result.map(&:jlpt_level).uniq).to eq [ "n5" ]
       end
     end
   end
