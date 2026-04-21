@@ -10,10 +10,12 @@ Rails.application.routes.draw do
         delete :logout
       end
       resources :bookmarks, only: %i[index]
+      resources :word_days, only: %i[index]
       resources :words, only: %i[index show] do
         resource :bookmark, only: %i[create destroy]
       end
       resource :study_session, only: %i[show update]
+      resource :profile, only: %i[update destroy]
     end
   end
 end
