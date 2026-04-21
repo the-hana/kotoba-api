@@ -5,6 +5,13 @@
 
 ## 2026-04-21
 
+### AIコンテンツエンジン + GET /api/v1/daily_story 実装
+
+- `DailyWordSelectorService` を実装。ユーザーの `target_level` 最多レベルから未使用単語10個を優先抽出し、不足分は使用済み単語で補充する。複数モデル（User / Word / DailyStoryWord）にまたがるロジークのためService Objectとして分離。
+- `DailyStoryCreationService` を実装。Lambda(Gemini)から受け取ったデータをひとつのトランザクションで DailyStory + DailyStoryWord×10 + AiContent×10 として保存。10個未満の場合は ArgumentError、story_date 重複は ActiveRecord::RecordInvalid でロールバック。
+- `GET /api/v1/daily_story` を実装。`resource :daily_story`（singular resource）でルーティング。`includes(:words, :ai_contents)` + `index_by(&:word_id)` でN+1クエリを完全排除。`today` 固定ではなく `order(story_date: :desc).first` で最新スtoリーを返す設計にした（Lambdaの生成タイミングのずれに対応）。
+- Lambda 側の POST エンドポイントはインフラ設計確定後に追加予定（認証方式未定のため今回はスコープ外）。
+
 ### Profile API の追加（GET / PUT / DELETE /api/v1/profile）
 
 - `ProfilesController` を新規作成し、プロフィール取得・更新・退会の3エンドポイントを実装
