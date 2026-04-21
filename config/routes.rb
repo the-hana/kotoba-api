@@ -16,7 +16,6 @@ Rails.application.routes.draw do
       end
       resource :study_session, only: %i[show update]
       resource :profile, only: %i[show update destroy]
-      resource :daily_story, only: %i[show], controller: "daily_stories"
     end
   end
 end
