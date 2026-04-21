@@ -136,6 +136,97 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/profile:
+    get:
+      summary: プロフィール取得
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: プロフィール取得成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/Profile"
+                  error:
+                    nullable: true
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      summary: プロフィール更新
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nickname:
+                  type: string
+                  maxLength: 30
+                target_level:
+                  type: string
+                  enum: [n5, n4, n3, n2, n1]
+      responses:
+        "200":
+          description: プロフィール更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/Profile"
+                  error:
+                    nullable: true
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      summary: 退会（アカウント削除）
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: 退会成功（関連データも削除）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessNullResponse"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v1/word_days:
     get:
       summary: DAY一覧取得
@@ -543,6 +634,24 @@ components:
           type: integer
         day_number:
           type: integer
+
+    Profile:
+      type: object
+      required: [id, email, nickname, target_level, created_at]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        nickname:
+          type: string
+        target_level:
+          type: string
+          enum: [n5, n4, n3, n2, n1]
+        created_at:
+          type: string
+          format: date-time
 
     ErrorResponse:
       type: object

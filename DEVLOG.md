@@ -3,6 +3,25 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
+## 2026-04-21
+
+### Profile API の追加（GET / PUT / DELETE /api/v1/profile）
+
+- `ProfilesController` を新規作成し、プロフィール取得・更新・退会の3エンドポイントを実装
+- routes.rb の `resource :profile` に `show` を追加（元々 update/destroy のみ定義されていた）
+- `update` の Strong Parameters は `nickname` と `target_level` のみ許可。email・password は変更不可とした（セキュリティ上、変更は別フローで行うべきため）
+- `destroy` は refresh token を `update_columns` で即時 revoke してから `current_user.destroy`。User モデルに `dependent: :destroy` が設定済みのため、`word_bookmarks` と `study_session` は Cascade 削除される
+- `doc/openapi.yml` に `/api/v1/profile` エンドポイントと `Profile` スキーマを追加
+- `spec/requests/api/v1/profiles_spec.rb` を作成し、正常系・異常系を網羅
+
+## 2026-04-21
+
+### WordDays API を追加（GET /api/v1/word_days）
+
+- JLPTレベル別のDAY一覧を返すエンドポイントを実装
+- フロントエンドのDAY選択画面用。`?jlpt_level=n5` でそのレベルのDAY番号一覧を取得できる
+- 各DAYの代表 `word_day_id` は `MIN(id)` で返す設計にした。DAYごとに複数のword_dayレコードが存在するため、study_session更新時に使えるidを1件だけ返す必要があった。MAX/MINどちらでもよいがMINの方が安定的
+
 ## 2026-04-19
 
 ### ブックマーク一覧 API の追加（GET /api/v1/bookmarks）

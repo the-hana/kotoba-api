@@ -15,7 +15,7 @@ Rails.application.routes.draw do
         resource :bookmark, only: %i[create destroy]
       end
       resource :study_session, only: %i[show update]
-      resource :profile, only: %i[update destroy]
+      resource :profile, only: %i[show update destroy]
     end
   end
 end
