@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   namespace :webhooks do
-    resource :daily_story, only: [:create], controller: "daily_stories"
+    resource :daily_story, only: [ :create ], controller: "daily_stories"
   end
 
   namespace :api do

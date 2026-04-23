@@ -20,7 +20,7 @@ class Webhooks::DailyStoriesController < Webhooks::ApplicationController
   private
 
   def creation_params
-    params.permit(:story_date, :content, :content_korean, words: [:word_id, :example_sentence, :example_sentence_korean])
+    params.permit(:story_date, :content, :content_korean, words: [ :word_id, :example_sentence, :example_sentence_korean ])
           .to_h.deep_symbolize_keys
   end
 end
