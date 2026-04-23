@@ -3,6 +3,21 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
+## 2026-04-23
+
+### Lambda → Rails Webhook エンドポイントの実装（POST /webhooks/daily_story）
+
+- `Webhooks::DailyStoriesController` を新規実装。Lambda が Gemini で生成したストーリーデータを受け取り、`DailyStoryCreationService` に委譲する
+- 認証は `X-Internal-Token` ヘッダーによる共有シークレット方式。`ENV.fetch("INTERNAL_API_KEY")` でデフォルト値なし — 未設定時は KeyError でサーバー起動を止める設計（デフォルト値 `""` にすると token 未送信で secure_compare が通過するため）
+- エンドポイントは `/api/v1/` 配下ではなく `/webhooks/` 直下に配置。versioned client API と Lambda イベント受信を分離（`pay` gem 等の Rails 慣例に準拠）
+- **冪等性**: `DailyStoryCreationService` を `[story, created]` タプル返却に変更。`find_by(story_date:)` で既存チェック → 存在すれば即返却。race condition は rescue で既存レコードを再取得して対応。重複 → 409 ではなく 200 を返すことで Lambda の再試行ループを防ぐ
+- **ロギング**: 認証失敗（IP付き）・成功・エラーを `Rails.logger` で記録
+- **nil ガード**: `@word_data&.size` で `words` キー未送信時の NoMethodError を防止
+- **FK 違反の握り潰し**: 存在しない `word_id` は `InvalidForeignKey` を ArgumentError に変換し DB 構造の漏洩を防ぐ
+- **INSERT 最適化**: `create!` × 20 回ループを `insert_all!` × 2 回に変更（単一トランザクション内）
+- `doc/openapi.yml` に 200（冪等）・201・401・422・500 の各レスポンス定義を追加
+- spec: 16ケース全パス（冪等性・nil ガード含む）
+
 ## 2026-04-21
 
 ### AIコンテンツエンジン + GET /api/v1/daily_story 実装
