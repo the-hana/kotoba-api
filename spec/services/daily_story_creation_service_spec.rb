@@ -31,11 +31,12 @@ RSpec.describe DailyStoryCreationService do
           .and change(AiContent, :count).by(10)
       end
 
-      it "作成したDailyStoryを返す" do
-        result = described_class.call(@params)
-        expect(result).to be_a(DailyStory)
-        expect(result.story_date).to eq Date.today
-        expect(result.content).to eq "テストストーリー"
+      it "[story, true] を返す" do
+        story, created = described_class.call(@params)
+        expect(story).to be_a(DailyStory)
+        expect(story.story_date).to eq Date.today
+        expect(story.content).to eq "テストストーリー"
+        expect(created).to be true
       end
     end
 
@@ -63,10 +64,43 @@ RSpec.describe DailyStoryCreationService do
       end
     end
 
-    context "異常系: story_dateが重複する場合" do
+    context "異常系: story_date が無効な場合" do
       before do
         @words = create_list(:word, 10, jlpt_level: "n5")
-        create(:daily_story, story_date: Date.today)
+      end
+
+      it "story_date が空の場合 ArgumentError を発生させる" do
+        params = { story_date: nil, content: "テスト", content_korean: "테스트", words: build_word_data(@words) }
+        expect { described_class.call(params) }.to raise_error(ArgumentError, /story_date が無効です/)
+      end
+
+      it "story_date が不正な文字列の場合 ArgumentError を発生させる" do
+        params = { story_date: "not-a-date", content: "テスト", content_korean: "테스트", words: build_word_data(@words) }
+        expect { described_class.call(params) }.to raise_error(ArgumentError, /story_date が無効です/)
+      end
+    end
+
+    context "異常系: word_id が重複する場合" do
+      before do
+        @words = create_list(:word, 10, jlpt_level: "n5")
+        duplicated = build_word_data(@words)
+        duplicated[0] = duplicated[1].dup
+        @params = { story_date: Date.today, content: "テスト", content_korean: "테스트", words: duplicated }
+      end
+
+      it "ArgumentError を発生させる" do
+        expect { described_class.call(@params) }.to raise_error(ArgumentError, /word_id に重複があります/)
+      end
+
+      it "DBにデータが作成されない" do
+        expect { described_class.call(@params) rescue nil }.not_to change(DailyStory, :count)
+      end
+    end
+
+    context "冪等性: story_dateが重複する場合" do
+      before do
+        @words = create_list(:word, 10, jlpt_level: "n5")
+        @existing = create(:daily_story, story_date: Date.today)
         @params = {
           story_date:     Date.today,
           content:        "重複ストーリー",
@@ -75,15 +109,15 @@ RSpec.describe DailyStoryCreationService do
         }
       end
 
-      it "ActiveRecord::RecordInvalidを発生させる" do
-        expect {
-          described_class.call(@params)
-        }.to raise_error(ActiveRecord::RecordInvalid)
+      it "[existing_story, false] を返す" do
+        story, created = described_class.call(@params)
+        expect(story.id).to eq @existing.id
+        expect(created).to be false
       end
 
-      it "トランザクションがrollbackされDailyStoryWordが作成されない" do
+      it "DailyStoryWordが追加作成されない" do
         expect {
-          described_class.call(@params) rescue nil
+          described_class.call(@params)
         }.not_to change(DailyStoryWord, :count)
       end
     end

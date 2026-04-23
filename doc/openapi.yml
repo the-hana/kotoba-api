@@ -581,12 +581,60 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /webhooks/daily_story:
+    post:
+      summary: 日次ストーリー生成 (Lambda → Rails webhook)
+      tags: [Webhooks]
+      security:
+        - internalToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebhookDailyStoryRequest"
+      responses:
+        "201":
+          description: ストーリー新規作成成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookDailyStoryResponse"
+        "200":
+          description: "冪等: 同日付のストーリーが既に存在する"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookDailyStoryResponse"
+        "401":
+          description: 認証失敗
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: バリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: サーバー内部エラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+    internalToken:
+      type: apiKey
+      in: header
+      name: X-Internal-Token
 
   schemas:
     TokenResponse:
@@ -722,6 +770,47 @@ components:
         example_sentence_korean:
           type: string
           nullable: true
+
+    WebhookDailyStoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            story_date:
+              type: string
+              format: date
+        error:
+          nullable: true
+
+    WebhookDailyStoryRequest:
+      type: object
+      required: [story_date, content, content_korean, words]
+      properties:
+        story_date:
+          type: string
+          format: date
+        content:
+          type: string
+        content_korean:
+          type: string
+        words:
+          type: array
+          minItems: 10
+          maxItems: 10
+          items:
+            type: object
+            required: [word_id, example_sentence, example_sentence_korean]
+            properties:
+              word_id:
+                type: integer
+              example_sentence:
+                type: string
+              example_sentence_korean:
+                type: string
 
     ErrorResponse:
       type: object
