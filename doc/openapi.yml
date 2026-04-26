@@ -705,6 +705,8 @@ components:
           enum: [n5, n4, n3, n2, n1]
         day_number:
           type: integer
+        streak_days:
+          type: integer
         updated_at:
           type: string
           format: date-time
