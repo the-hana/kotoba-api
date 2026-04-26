@@ -22,6 +22,7 @@ RSpec.describe "Api::V1::StudySessions", type: :request do
         expect(data["word_day_id"]).to eq word_day.id
         expect(data["jlpt_level"]).to eq word_day.word.jlpt_level
         expect(data["day_number"]).to eq word_day.day_number
+        expect(data["streak_days"]).to eq 1
         expect(data["updated_at"]).to be_present
       end
     end
@@ -73,6 +74,7 @@ RSpec.describe "Api::V1::StudySessions", type: :request do
         expect(data["word_day_id"]).to eq word_day.id
         expect(data["jlpt_level"]).to eq word_day.word.jlpt_level
         expect(data["day_number"]).to eq word_day.day_number
+        expect(data["streak_days"]).to eq 1
       end
     end
 
@@ -98,6 +100,79 @@ RSpec.describe "Api::V1::StudySessions", type: :request do
         # 4. 値のアサーション
         expect(response.parsed_body["data"]["word_day_id"]).to eq word_day_2.id
         expect(response.parsed_body["data"]["day_number"]).to eq 2
+      end
+    end
+
+    context "正常系: streak_days — 当日の重複更新" do
+      let(:user) { create(:user) }
+
+      before do
+        word = create(:word)
+        word_day_1 = create(:word_day, word: word, day_number: 1)
+        word_day_2 = create(:word_day, word: word, day_number: 2)
+        create(:study_session, user: user, word_day: word_day_1)
+        put "/api/v1/study_session", params: { word_day_id: word_day_2.id }, headers: auth_headers(user)
+      end
+
+      it "streak_daysが1のまま" do
+        # 1. HTTPステータスのアサーション
+        expect(response.status).to eq 200
+        # 2. DBのアサーション
+        expect(StudySession.find_by(user: user).streak_days).to eq 1
+        # 3. 構造のアサーション
+        assert_response_schema_confirm(200)
+        # 4. 値のアサーション
+        expect(response.parsed_body["data"]["streak_days"]).to eq 1
+      end
+    end
+
+    context "正常系: streak_days — 昨日更新済みの場合" do
+      let(:user) { create(:user) }
+
+      before do
+        word = create(:word)
+        word_day_1 = create(:word_day, word: word, day_number: 1)
+        word_day_2 = create(:word_day, word: word, day_number: 2)
+        travel_to 1.day.ago do
+          create(:study_session, user: user, word_day: word_day_1)
+        end
+        put "/api/v1/study_session", params: { word_day_id: word_day_2.id }, headers: auth_headers(user)
+      end
+
+      it "streak_daysが2になる" do
+        # 1. HTTPステータスのアサーション
+        expect(response.status).to eq 200
+        # 2. DBのアサーション
+        expect(StudySession.find_by(user: user).streak_days).to eq 2
+        # 3. 構造のアサーション
+        assert_response_schema_confirm(200)
+        # 4. 値のアサーション
+        expect(response.parsed_body["data"]["streak_days"]).to eq 2
+      end
+    end
+
+    context "正常系: streak_days — 2日以上経過の場合" do
+      let(:user) { create(:user) }
+
+      before do
+        word = create(:word)
+        word_day_1 = create(:word_day, word: word, day_number: 1)
+        word_day_2 = create(:word_day, word: word, day_number: 2)
+        travel_to 3.days.ago do
+          create(:study_session, user: user, word_day: word_day_1, streak_days: 5)
+        end
+        put "/api/v1/study_session", params: { word_day_id: word_day_2.id }, headers: auth_headers(user)
+      end
+
+      it "streak_daysが1にリセットされる" do
+        # 1. HTTPステータスのアサーション
+        expect(response.status).to eq 200
+        # 2. DBのアサーション
+        expect(StudySession.find_by(user: user).streak_days).to eq 1
+        # 3. 構造のアサーション
+        assert_response_schema_confirm(200)
+        # 4. 値のアサーション
+        expect(response.parsed_body["data"]["streak_days"]).to eq 1
       end
     end
 

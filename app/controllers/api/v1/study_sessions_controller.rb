@@ -34,9 +34,10 @@ module Api
 
         {
           word_day_id: session.word_day_id,
-          jlpt_level: session.word_day.word.jlpt_level,
-          day_number: session.word_day.day_number,
-          updated_at: session.updated_at
+          jlpt_level:  session.word_day.word.jlpt_level,
+          day_number:  session.word_day.day_number,
+          streak_days: session.streak_days,
+          updated_at:  session.updated_at
         }
       end
     end
