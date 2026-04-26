@@ -31,6 +31,7 @@ RSpec.configure do |config|
   config.include Committee::Rails::Test::Methods
   config.include CommitteeHelpers, type: :request
   config.include AuthHelpers, type: :request
+  config.include ActiveSupport::Testing::TimeHelpers
 
   config.fixture_paths = [
     Rails.root.join('spec/fixtures')
