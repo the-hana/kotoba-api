@@ -7,12 +7,7 @@ module Api
                           .order(story_date: :desc)
                           .first
 
-        if story
-          render json: { success: true, data: serialize(story), error: nil }
-        else
-          render json: { success: false, data: nil, error: "ストーリーがまだ生成されていません" },
-                 status: :not_found
-        end
+        render json: { success: true, data: story ? serialize(story) : nil, error: nil }
       end
 
       private

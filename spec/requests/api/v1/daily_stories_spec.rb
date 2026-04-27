@@ -48,19 +48,20 @@ RSpec.describe "Api::V1::DailyStories", type: :request do
       end
     end
 
-    context "404: ストーリーが存在しない場合" do
+    context "正常系: ストーリーが存在しない場合" do
       before do
         user = create(:user)
         get "/api/v1/daily_story", headers: auth_headers(user)
       end
 
-      it "404を返す" do
+      it "200を返しdataがnull" do
         # 1. HTTPステータスのアサーション
-        expect(response.status).to eq 404
+        expect(response.status).to eq 200
         # 3. 構造のアサーション
-        assert_response_schema_confirm(404)
+        assert_response_schema_confirm(200)
         # 4. 値のアサーション
-        expect(response.parsed_body["success"]).to be false
+        expect(response.parsed_body["success"]).to be true
+        expect(response.parsed_body["data"]).to be_nil
       end
     end
 
