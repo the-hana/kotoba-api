@@ -3,6 +3,14 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
+## 2026-05-02
+
+### タイムゾーンを Asia/Tokyo に統一
+
+- `config.time_zone = "Asia/Tokyo"` を設定。これまで未設定（UTC デフォルト）だったため、DB の `updated_at` が UTC 表示となり混乱を招いていた。
+- `StudySession#calculate_streak` 内の `.in_time_zone("Asia/Tokyo")` 呼び出しを削除。全体 timezone が JST になったため `Time.current.to_date` / `updated_at.to_date` が自動的に JST 基準となる。
+- **設計判断**: timezone をグローバルで統一することで、今後どこで `Time.current` を使っても JST 基準になり、計算ロジック内での明示的な変換が不要になる。
+
 ## 2026-04-26
 
 ### StudySession に streak_days を追加
