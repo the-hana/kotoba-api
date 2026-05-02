@@ -16,7 +16,7 @@ RSpec.describe DailyStoryCreationService do
       before do
         @words = create_list(:word, 10, jlpt_level: "n5")
         @params = {
-          story_date:     Date.today,
+          story_date:     Date.current,
           content:        "テストストーリー",
           content_korean: "테스트 스토리",
           words:          build_word_data(@words)
@@ -34,7 +34,7 @@ RSpec.describe DailyStoryCreationService do
       it "[story, true] を返す" do
         story, created = described_class.call(@params)
         expect(story).to be_a(DailyStory)
-        expect(story.story_date).to eq Date.today
+        expect(story.story_date).to eq Date.current
         expect(story.content).to eq "テストストーリー"
         expect(created).to be true
       end
@@ -44,7 +44,7 @@ RSpec.describe DailyStoryCreationService do
       before do
         @words = create_list(:word, 9, jlpt_level: "n5")
         @params = {
-          story_date:     Date.today,
+          story_date:     Date.current,
           content:        "テストストーリー",
           content_korean: "테스트 스토리",
           words:          build_word_data(@words)
@@ -85,7 +85,7 @@ RSpec.describe DailyStoryCreationService do
         @words = create_list(:word, 10, jlpt_level: "n5")
         duplicated = build_word_data(@words)
         duplicated[0] = duplicated[1].dup
-        @params = { story_date: Date.today, content: "テスト", content_korean: "테스트", words: duplicated }
+        @params = { story_date: Date.current, content: "テスト", content_korean: "테스트", words: duplicated }
       end
 
       it "ArgumentError を発生させる" do
@@ -100,9 +100,9 @@ RSpec.describe DailyStoryCreationService do
     context "冪等性: story_dateが重複する場合" do
       before do
         @words = create_list(:word, 10, jlpt_level: "n5")
-        @existing = create(:daily_story, story_date: Date.today)
+        @existing = create(:daily_story, story_date: Date.current)
         @params = {
-          story_date:     Date.today,
+          story_date:     Date.current,
           content:        "重複ストーリー",
           content_korean: "중복 스토리",
           words:          build_word_data(@words)

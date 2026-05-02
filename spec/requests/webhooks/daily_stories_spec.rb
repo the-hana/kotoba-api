@@ -10,7 +10,7 @@ RSpec.describe "Webhooks::DailyStories", type: :request do
 
   def story_payload(words)
     {
-      story_date: Date.today.to_s,
+      story_date: Date.current.to_s,
       content: "テストストーリーです。",
       content_korean: "테스트 스토리입니다.",
       words: words.map do |w|
@@ -37,7 +37,7 @@ RSpec.describe "Webhooks::DailyStories", type: :request do
         assert_response_schema_confirm(201)
         # 4. 値のアサーション
         expect(response.parsed_body["success"]).to be true
-        expect(response.parsed_body["data"]["story_date"]).to eq Date.today.to_s
+        expect(response.parsed_body["data"]["story_date"]).to eq Date.current.to_s
       end
     end
 
@@ -64,7 +64,7 @@ RSpec.describe "Webhooks::DailyStories", type: :request do
     context "401: X-Internal-Token がない場合" do
       before do
         post "/webhooks/daily_story",
-             params: { story_date: Date.today.to_s }.to_json,
+             params: { story_date: Date.current.to_s }.to_json,
              headers: { "Content-Type" => "application/json" }
       end
 
@@ -81,7 +81,7 @@ RSpec.describe "Webhooks::DailyStories", type: :request do
     context "401: X-Internal-Token が不正な場合" do
       before do
         post "/webhooks/daily_story",
-             params: { story_date: Date.today.to_s }.to_json,
+             params: { story_date: Date.current.to_s }.to_json,
              headers: internal_headers.merge("X-Internal-Token" => "wrong_token")
       end
 
@@ -109,7 +109,7 @@ RSpec.describe "Webhooks::DailyStories", type: :request do
 
     context "422: words キーがない場合" do
       before do
-        payload = { story_date: Date.today.to_s, content: "テスト", content_korean: "테스트" }.to_json
+        payload = { story_date: Date.current.to_s, content: "テスト", content_korean: "테스트" }.to_json
         post "/webhooks/daily_story", params: payload, headers: internal_headers
       end
 
