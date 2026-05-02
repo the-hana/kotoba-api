@@ -9,8 +9,8 @@ class StudySession < ApplicationRecord
   private
 
   def calculate_streak
-    previous_date = updated_at.in_time_zone("Asia/Tokyo").to_date
-    today = Time.current.in_time_zone("Asia/Tokyo").to_date
+    previous_date = updated_at.to_date
+    today = Time.current.to_date
 
     self.streak_days = case previous_date
     when today     then streak_days

@@ -6,7 +6,7 @@ RSpec.describe "Api::V1::DailyStories", type: :request do
       before do
         user  = create(:user)
         words = create_list(:word, 10, jlpt_level: "n5")
-        story = create(:daily_story, story_date: Date.today)
+        story = create(:daily_story, story_date: Date.current)
         words.each do |w|
           create(:daily_story_word, daily_story: story, word: w)
           create(:ai_content, daily_story: story, word: w)
@@ -24,15 +24,15 @@ RSpec.describe "Api::V1::DailyStories", type: :request do
         assert_response_schema_confirm(200)
         # 4. 値のアサーション
         expect(response.parsed_body["success"]).to be true
-        expect(response.parsed_body["data"]["story_date"]).to eq Date.today.to_s
+        expect(response.parsed_body["data"]["story_date"]).to eq Date.current.to_s
       end
     end
 
     context "正常系: 複数ストーリーがある場合、最新を返す" do
       before do
         user      = create(:user)
-        new_story = create(:daily_story, story_date: Date.today)
-        _old_story = create(:daily_story, story_date: Date.today - 1)
+        new_story = create(:daily_story, story_date: Date.current)
+        _old_story = create(:daily_story, story_date: Date.current - 1)
         words     = create_list(:word, 10, jlpt_level: "n5")
         words.each do |w|
           create(:daily_story_word, daily_story: new_story, word: w)
@@ -44,7 +44,7 @@ RSpec.describe "Api::V1::DailyStories", type: :request do
 
       it "最新日付のストーリーを返す" do
         expect(response.status).to eq 200
-        expect(response.parsed_body["data"]["story_date"]).to eq Date.today.to_s
+        expect(response.parsed_body["data"]["story_date"]).to eq Date.current.to_s
       end
     end
 

@@ -3,6 +3,19 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
+## 2026-05-02
+
+### タイムゾーンを Asia/Tokyo に統一
+
+- `config.time_zone = "Asia/Tokyo"` を設定。これまで未設定（UTC デフォルト）だったため、DB の `updated_at` が UTC 表示となり混乱を招いていた。
+- `StudySession#calculate_streak` 内の `.in_time_zone("Asia/Tokyo")` 呼び出しを削除。全体 timezone が JST になったため `Time.current.to_date` / `updated_at.to_date` が自動的に JST 基準となる。
+- **設計判断**: timezone をグローバルで統一することで、今後どこで `Time.current` を使っても JST 基準になり、計算ロジック内での明示的な変換が不要になる。
+
+### spec/factory の Date.today を Date.current に統一
+
+- `Date.today` はシステム timezone（UTC）基準のため、CI など UTC 環境では JST と日付がずれる可能性があった。
+- `Date.current` は `Time.zone.today` の alias で `config.time_zone` に従う。timezone 統一に合わせ全 spec / factory を置換。
+
 ## 2026-04-26
 
 ### StudySession に streak_days を追加
@@ -10,7 +23,7 @@
 - migration: `study_sessions` テーブルに `streak_days integer not null default 1` を追加。既存レコードは default 1 で補完。
 - streak 計算ロジックを `StudySession#calculate_streak` として `before_save` コールバックに実装（`if: :persisted?` で新規作成時はスキップ）。コントローラーには一切書かない方針。
 - **設計判断**: `before_save` 時点では `updated_at` がまだ旧値（ActiveRecord の Timestamp モジュールは `before_create/before_update` でタイムスタンプを更新するため）。これを利用して「前回の更新日時」と当日を比較する。
-- **タイムゾーン**: `Time.current.in_time_zone("Asia/Tokyo")` を明示。グローバルな `config.time_zone` を変更せず、計算ロジック内でのみ Tokyo 換算することで副作用を最小化。
+- **タイムゾーン**: 当初は `Time.current.in_time_zone("Asia/Tokyo")` を明示していたが、2026-05-02 に `config.time_zone = "Asia/Tokyo"` をグローバル設定したため、現在は `to_date` のみで JST 基準となっている。
 - GET / PUT レスポンスの serialize に `streak_days` を追加。
 - `doc/openapi.yml` の `StudySession` スキーマに `streak_days: integer` を追加。
 - spec: 当日重複更新・昨日更新・2日以上経過の3ケースを追加（`travel_to` で時刻制御）。
