@@ -112,6 +112,85 @@ RSpec.describe "Api::V1::Profiles", type: :request do
     end
   end
 
+  describe "PUT /api/v1/profile/password" do
+    context "正常系: 正しい現在のパスワードで変更成功" do
+      before do
+        user = create(:user, password: "oldpassword", password_confirmation: "oldpassword")
+        put "/api/v1/profile/password",
+          params: { current_password: "oldpassword", new_password: "newpassword" },
+          headers: auth_headers(user)
+      end
+
+      it "200を返し新しいパスワードで認証できる" do
+        # 1. HTTPステータスのアサーション
+        expect(response.status).to eq 200
+        # 2. DBのアサーション
+        expect(User.first.authenticate("newpassword")).to be_truthy
+        # 3. 構造のアサーション
+        assert_response_schema_confirm(200)
+        # 4. 値のアサーション
+        expect(response.parsed_body["success"]).to be true
+        expect(response.parsed_body["data"]).to be_nil
+      end
+    end
+
+    context "異常系: 現在のパスワードが不正" do
+      before do
+        user = create(:user, password: "correctpassword", password_confirmation: "correctpassword")
+        put "/api/v1/profile/password",
+          params: { current_password: "wrongpassword", new_password: "newpassword" },
+          headers: auth_headers(user)
+      end
+
+      it "422を返しパスワードは変更されない" do
+        # 1. HTTPステータスのアサーション
+        expect(response.status).to eq 422
+        # 2. DBのアサーション
+        expect(User.first.authenticate("newpassword")).to be false
+        # 3. 構造のアサーション
+        assert_response_schema_confirm(422)
+        # 4. 値のアサーション
+        expect(response.parsed_body["success"]).to be false
+        expect(response.parsed_body["error"]).to be_present
+      end
+    end
+
+    context "異常系: 新しいパスワードが6文字未満" do
+      before do
+        user = create(:user, password: "oldpassword", password_confirmation: "oldpassword")
+        put "/api/v1/profile/password",
+          params: { current_password: "oldpassword", new_password: "abc" },
+          headers: auth_headers(user)
+      end
+
+      it "422を返す" do
+        # 1. HTTPステータスのアサーション
+        expect(response.status).to eq 422
+        # 2. DBのアサーション
+        expect(User.first.authenticate("abc")).to be false
+        # 3. 構造のアサーション
+        assert_response_schema_confirm(422)
+        # 4. 値のアサーション
+        expect(response.parsed_body["success"]).to be false
+        expect(response.parsed_body["error"]).to be_present
+      end
+    end
+
+
+    context "異常系: Authorizationヘッダーなし" do
+      before do
+        put "/api/v1/profile/password",
+          params: { current_password: "oldpassword", new_password: "newpassword" }
+      end
+
+      it "401を返す" do
+        expect(response.status).to eq 401
+        assert_response_schema_confirm(401)
+        expect(response.parsed_body["success"]).to be false
+      end
+    end
+  end
+
   describe "DELETE /api/v1/profile" do
     context "正常系: 退会成功" do
       before do

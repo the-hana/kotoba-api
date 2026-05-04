@@ -3,6 +3,16 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
+## 2026-05-04
+
+### パスワード変更エンドポイントを追加
+
+- `PUT /api/v1/profile/password` を新設。`current_password` で本人確認後、`new_password` に更新
+- `new_password_confirmation` はフロント側で検証済みのため受け取らない設計にした（バックエンドで二重検証しても意味がない）
+- `current_password` を必須にした理由: セッション（JWTトークン）が漏洩しても、パスワード変更まで乗っ取られないようにするため
+- `User` モデルに `validates :password, length: { minimum: 6 }, allow_nil: true` を追加（新規登録・変更時のみ検証、`nil` は既存レコードの通常更新をブロックしない）
+- RSpec: 4ケース追加（正常系1、異常系3）
+
 ## 2026-05-02
 
 ### タイムゾーンを Asia/Tokyo に統一

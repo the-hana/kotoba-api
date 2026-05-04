@@ -19,7 +19,9 @@ Rails.application.routes.draw do
         resource :bookmark, only: %i[create destroy]
       end
       resource :study_session, only: %i[show update]
-      resource :profile, only: %i[show update destroy]
+      resource :profile, only: %i[show update destroy] do
+          put :password
+        end
       resource :daily_story, only: %i[show], controller: "daily_stories"
     end
   end
