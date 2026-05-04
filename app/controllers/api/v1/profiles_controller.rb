@@ -21,6 +21,10 @@ module Api
           return render json: { success: false, error: "現在のパスワードが正しくありません" }, status: :unprocessable_entity
         end
 
+        if password_params[:new_password].blank?
+          return render json: { success: false, error: "新しいパスワードを入力してください" }, status: :unprocessable_entity
+        end
+
         if current_user.update(password: password_params[:new_password])
           render json: { success: true, data: nil }
         else

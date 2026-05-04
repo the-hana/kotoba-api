@@ -176,6 +176,26 @@ RSpec.describe "Api::V1::Profiles", type: :request do
       end
     end
 
+    context "異常系: new_passwordが空" do
+      before do
+        user = create(:user, password: "oldpassword", password_confirmation: "oldpassword")
+        put "/api/v1/profile/password",
+          params: { current_password: "oldpassword" },
+          headers: auth_headers(user)
+      end
+
+      it "422を返し日本語エラーメッセージを含む" do
+        # 1. HTTPステータスのアサーション
+        expect(response.status).to eq 422
+        # 2. DBのアサーション
+        expect(User.first.authenticate("oldpassword")).to be_truthy
+        # 3. 構造のアサーション
+        assert_response_schema_confirm(422)
+        # 4. 値のアサーション
+        expect(response.parsed_body["success"]).to be false
+        expect(response.parsed_body["error"]).to eq "新しいパスワードを入力してください"
+      end
+    end
 
     context "異常系: Authorizationヘッダーなし" do
       before do
