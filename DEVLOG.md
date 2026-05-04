@@ -5,6 +5,14 @@
 
 ## 2026-05-04
 
+### アクセストークン期限切れ後の強制ログアウト問題を修正
+
+- `/auth/refresh` が `skip_before_action` に含まれておらず、`authenticate_user!` が実行されていたため、refresh リクエスト時に "Authorizationヘッダーがありません" 401 を返すバグを修正
+- `skip_before_action` に `refresh` を追加
+- `find_user_for_refresh` を新設: Authorization ヘッダーがある場合は access token から user_id を取得（`verify: false` で期限切れ許容）、ない場合は body の `user_id` を fallback として使用
+- **設計判断**: ページリロード後は accessToken がメモリから消えるため、body の `user_id` を受け入れる仕組みが必須。user_id は非秘匿情報であり、実際の認証は bcrypt 検証が担保するため安全性に問題なし
+- spec: ヘッダーなし・user_id あり（正常系）、ヘッダーなし・user_id なし（異常系）の 2 ケースを追加
+
 ### パスワード変更エンドポイントを追加
 
 - `PUT /api/v1/profile/password` を新設。`current_password` で本人確認後、`new_password` に更新
