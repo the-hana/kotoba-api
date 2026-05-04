@@ -1,7 +1,7 @@
 module Api
   module V1
     class AuthController < ApplicationController
-      skip_before_action :authenticate_user!, only: %i[signup login]
+      skip_before_action :authenticate_user!, only: %i[signup login refresh]
 
       # POST /api/v1/auth/signup
       def signup
@@ -51,7 +51,7 @@ module Api
       end
 
       def refresh_params
-        params.permit(:refresh_token)
+        params.permit(:refresh_token, :user_id)
       end
 
       def issue_tokens(user)
@@ -69,19 +69,27 @@ module Api
         raw_token = refresh_params[:refresh_token]
         raise JWT::DecodeError, "refresh_tokenがありません" if raw_token.blank?
 
-        # Authorizationヘッダーのaccess tokenからuser_idを取得（有効期限切れでも許可）
-        header = request.headers["Authorization"]
-        raise JWT::DecodeError, "Authorizationヘッダーがありません" if header.blank?
-
-        token = header.split(" ").last
-        decoded = JWT.decode(token, JsonWebToken::SECRET_KEY, false).first
-        user = User.find_by(id: decoded["user_id"])
-
+        user = find_user_for_refresh
         raise JWT::DecodeError, "ユーザーが見つかりません" unless user
         raise JWT::DecodeError, "refresh_tokenが無効または期限切れです" unless user.refresh_token_expires_at&.future?
         raise JWT::DecodeError, "refresh_tokenが無効または期限切れです" unless BCrypt::Password.new(user.refresh_token).is_password?(raw_token)
 
         user
+      end
+
+      def find_user_for_refresh
+        header = request.headers["Authorization"]
+        if header.present?
+          # Authorizationヘッダーがある場合: access tokenからuser_idを取得（有効期限切れでも許可）
+          token = header.split(" ").last
+          decoded = JWT.decode(token, JsonWebToken::SECRET_KEY, false).first
+          User.find_by(id: decoded["user_id"])
+        else
+          # ヘッダーがない場合（ページリロード後など）: bodyのuser_idを使用
+          user_id = refresh_params[:user_id]
+          raise JWT::DecodeError, "ユーザー情報がありません" if user_id.blank?
+          User.find_by(id: user_id)
+        end
       end
     end
   end
