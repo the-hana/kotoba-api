@@ -169,14 +169,18 @@ RSpec.describe "Api::V1::Auth", type: :request do
         post "/api/v1/auth/login", params: { email: "refresh2@example.com", password: "password123" }
         @refresh_token = response.parsed_body["data"]["refresh_token"]
         @user_id = user.id
+        @old_refresh_token_digest = user.reload.refresh_token
 
         post "/api/v1/auth/refresh",
           params: { refresh_token: @refresh_token, user_id: @user_id }
       end
 
-      it "新しいトークンペアを返す" do
+      it "新しいトークンペアを返しrefresh_tokenを更新する" do
         # 1. HTTPステータスのアサーション
         expect(response.status).to eq 200
+        # 2. DBのアサーション — refresh_tokenが更新されていること
+        user = User.find_by(email: "refresh2@example.com")
+        expect(user.refresh_token).not_to eq @old_refresh_token_digest
         # 3. 構造のアサーション
         assert_response_schema_confirm(200)
         # 4. 値のアサーション
