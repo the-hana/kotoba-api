@@ -15,6 +15,23 @@ module Api
         end
       end
 
+      # PUT /api/v1/profile/password
+      def password
+        unless current_user.authenticate(password_params[:current_password])
+          return render json: { success: false, error: "現在のパスワードが正しくありません" }, status: :unprocessable_entity
+        end
+
+        if password_params[:new_password].blank?
+          return render json: { success: false, error: "新しいパスワードを入力してください" }, status: :unprocessable_entity
+        end
+
+        if current_user.update(password: password_params[:new_password])
+          render json: { success: true, data: nil }
+        else
+          render json: { success: false, error: current_user.errors.full_messages }, status: :unprocessable_entity
+        end
+      end
+
       # DELETE /api/v1/profile
       def destroy
         # refresh tokenを無効化してからアカウントを削除
@@ -27,6 +44,10 @@ module Api
 
       def profile_params
         params.permit(:nickname, :target_level)
+      end
+
+      def password_params
+        params.permit(:current_password, :new_password)
       end
 
       def profile_data(user)

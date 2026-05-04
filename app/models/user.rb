@@ -12,6 +12,7 @@ class User < ApplicationRecord
   validates :email, presence: true, uniqueness: { case_sensitive: false },
                     format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :nickname, presence: true, length: { maximum: 30 }
+  validates :password, length: { minimum: 6 }, allow_nil: true
   validates :target_level, inclusion: { in: JLPT_LEVELS }
 
   private

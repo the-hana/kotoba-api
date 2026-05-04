@@ -227,6 +227,45 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /api/v1/profile/password:
+    put:
+      summary: パスワード変更
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, new_password]
+              properties:
+                current_password:
+                  type: string
+                new_password:
+                  type: string
+                  minLength: 6
+      responses:
+        "200":
+          description: パスワード変更成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessNullResponse"
+        "401":
+          description: 未認証
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: 現在のパスワード不一致またはバリデーションエラー
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /api/v1/word_days:
     get:
       summary: DAY一覧取得
