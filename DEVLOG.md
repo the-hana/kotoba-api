@@ -3,6 +3,15 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
+## 2026-05-27
+
+### GitHub Actions デプロイ workflow 追加
+
+- `.github/workflows/deploy.yml` を追加
+- `workflow_run` トリガーで CI (scan_ruby / lint / test) が全て成功した後にのみ deploy を実行。CI 失敗でもデプロイが走る問題を防ぐため。
+- ECR に `:sha` と `:latest` の2タグを同時 push。`:latest` は Docker layer cache のソースとして次回ビルド時に活用し、ビルド時間を短縮。
+- `wait-for-service-stability: false`: t2.micro 1台 + `minimum_healthy_percent=0` 構成では安定化待機がタイムアウトを引き起こすため意図的に無効化。
+
 ## 2026-05-04
 
 ### アクセストークン期限切れ後の強制ログアウト問題を修正
