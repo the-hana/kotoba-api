@@ -1,0 +1,84 @@
+name: Deploy API
+
+# CI (scan_ruby + lint + test) が全て成功した後にのみ実行
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+env:
+  AWS_REGION: ap-northeast-1
+  ECR_REPOSITORY: kotoba-api
+  ECS_CLUSTER: kotoba-api
+  ECS_SERVICE: kotoba-api
+  CONTAINER_NAME: kotoba-api
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # CI が失敗した場合はデプロイをスキップ
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      # CI がテストした正確な SHA をチェックアウト (連続 push 時の race condition を防ぐ)
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: AWS認証 (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: ECRログイン
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Dockerイメージビルド・プッシュ
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          # :latest をキャッシュソースとして pull (存在しない場合は無視)
+          docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest || true
+
+          docker build \
+            --cache-from $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            -t $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            .
+
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: 最新Task Definitionを取得
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ env.ECS_SERVICE }} \
+            --query taskDefinition \
+            > task-definition.json
+
+      - name: Task DefinitionのImageを更新
+        id: new-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: ECSにデプロイ
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.new-task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          # t2.micro 1台構成: minimum_healthy_percent=0 のため安定化待機は意味をなさない
+          wait-for-service-stability: false
