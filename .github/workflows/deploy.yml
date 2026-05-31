@@ -24,7 +24,10 @@ jobs:
       contents: read
 
     steps:
+      # CI がテストした正確な SHA をチェックアウト (連続 push 時の race condition を防ぐ)
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: AWS認証 (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
@@ -40,7 +43,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
         run: |
           # :latest をキャッシュソースとして pull (存在しない場合は無視)
           docker pull $ECR_REGISTRY/$ECR_REPOSITORY:latest || true
