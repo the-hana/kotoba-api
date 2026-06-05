@@ -30,7 +30,7 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: AWS認証 (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
