@@ -80,5 +80,4 @@ jobs:
           task-definition: ${{ steps.new-task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
-          # t2.micro 1台構成: minimum_healthy_percent=0 のため安定化待機は意味をなさない
-          wait-for-service-stability: false
+          wait-for-service-stability: true
