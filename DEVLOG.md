@@ -3,6 +3,18 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
+## 2026-06-26
+
+### 本番環境のDB接続をDATABASE_URLに統一・Solid Cache/Queue無効化
+
+- `database.yml` の production を Rails 8 デフォルトのマルチDB構成 (`primary` / `cache` / `queue`) から `url: ENV["DATABASE_URL"]` の単一DB設定に変更
+- **原因**: ECS から `DATABASE_URL` が注入されていたが、マルチDB設定では primary にしか適用されず、cache/queue DB がローカルソケットへの接続を試みて `db:prepare` が失敗していた
+- `production.rb` の Solid Cache / Solid Queue を無効化 (`cache_store → memory_store`、`solid_queue` 設定を削除)
+  - このプロジェクトの AI 処理は Lambda 側で実行するため、Rails の Active Job / キャッシュ層は不要
+- nokogiri を 1.19.4 にアップデート (Use-After-Free 系脆弱性 8件対応)
+- Dependabot 自動 PR を無効化 (`open-pull-requests-limit: 0`)
+  - CI に bundler-audit + brakeman が既にあるため重複。自動 PR がリポジトリを散らかす問題を解消
+
 ## 2026-05-27
 
 ### GitHub Actions デプロイ workflow 追加
