@@ -192,6 +192,30 @@ RSpec.describe "Api::V1::StudySessions", type: :request do
       end
     end
 
+    context "異常系: 他ユーザーのセッションに影響しない" do
+      let(:user) { create(:user) }
+      let(:other_user) { create(:user) }
+
+      before do
+        word = create(:word)
+        word_day_other = create(:word_day, word: word, day_number: 1)
+        word_day_user  = create(:word_day, word: word, day_number: 2)
+        create(:study_session, user: other_user, word_day: word_day_other, streak_days: 5)
+        put "/api/v1/study_session", params: { word_day_id: word_day_user.id }, headers: auth_headers(user)
+      end
+
+      it "他ユーザーのセッションは変更されない" do
+        # 1. HTTPステータスのアサーション
+        expect(response.status).to eq 200
+        # 2. DBのアサーション（他ユーザーのセッションが保持されている）
+        other_session = StudySession.find_by(user: other_user)
+        expect(other_session.streak_days).to eq 5
+        expect(other_session.word_day.day_number).to eq 1
+        # 全体件数が増えていることを確認（混在していない）
+        expect(StudySession.count).to eq 2
+      end
+    end
+
     context "異常系: Authorizationヘッダーなし" do
       let(:word_day) { create(:word_day) }
 

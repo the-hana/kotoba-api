@@ -5,6 +5,25 @@
 
 ## 2026-06-27
 
+### セキュリティレビュー対応: JWT署名検証・認可テスト追加
+
+- `find_user_for_refresh` の `JWT.decode` で第3引数 `false`（署名検証オフ）→ `true` に修正。`verify_expiration: false` で有効期限切れのみ許容する意図を明示
+  - **設計判断**: 従来は「有効期限切れトークンを受け入れるため署名検証も無効化」していたが、JWT gem の `verify_expiration: false` オプションで「署名は検証しつつ exp のみ無視」できる。refresh token の bcrypt 検証が最終防衛線だが、署名検証を残すことで改ざんトークンによる user_id 詐称の余地を排除
+- `bookmarks_spec`: 他ユーザーがブックマークした単語を DELETE しようとした場合に 404 を返し、かつ他ユーザーのレコードが消えないことを検証するテストを追加
+- `study_sessions_spec`: PUT 実行時に他ユーザーのセッション（word_day_id / streak_days）が変更されないことを検証するデータ分離テストを追加
+
+### 本番デプロイ完了・API疎通確認
+
+- ECS コンテナが連続クラッシュする問題を一連の修正で解消し、プロダクション API の疎通を確認
+- **問題①: `Missing secret_key_base`** — `credentials.yml.enc` はイメージに含まれているが `RAILS_MASTER_KEY` が ECS に渡っていなかった。SSM に `rails_master_key` パラメータを追加し、ECS タスク定義の secrets に `RAILS_MASTER_KEY` として注入するよう変更
+- **問題②: `The 'cache' database is not configured`** — `production.rb` で Solid Cache / Queue を無効化しても gem 自体がロード時に `connects_to` を実行するため、設定変更だけでは不十分だった。Gemfile から `solid_cache` / `solid_queue` を完全削除し、関連ファイル (`db/cache_schema.rb`、`db/queue_schema.rb`、`bin/jobs`、`puma.rb` の SolidQueue プラグイン行、`recurring.yml` の production 設定) もあわせて削除
+  - **設計判断**: このプロジェクトの AI 処理は Lambda 側で行うため、Rails の非同期 Job / キャッシュ層はそもそも不要。gem ごと削除が正しい判断
+- **問題③: CloudFront 504 (ポート不一致)** — Thruster は port 80 で listen するが、ECS portMappings・CloudFront origin・Security Group が全て 3000 のままだった。3 ファイルを 80 に修正
+  - Terraform の `cloudfront.tf` に `lifecycle { ignore_changes = [origin] }` があったため `http_port` 変更が適用されなかった。lifecycle を一時削除 → apply → 復元の手順で回避
+- **問題④: RDS が stopped 状態** — EC2 は自動中止スケジュールで起動しているが RDS は stopped のまま。ECS タスクが `db:prepare` で DB 接続待ちのままフリーズし、コンテナ内にログが出力されず原因特定に時間がかかった
+  - RDS を手動 start 後に force-new-deployment で解消
+- 最終確認: `POST /api/v1/auth/signup` → 201、`POST /api/v1/auth/login` → access token 発行、`GET /api/v1/words` → N5 単語 20 件返却
+
 ### 本番デプロイ完了・API疎通確認
 
 - ECS コンテナが連続クラッシュする問題を一連の修正で解消し、プロダクション API の疎通を確認
