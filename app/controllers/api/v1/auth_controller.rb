@@ -80,9 +80,10 @@ module Api
       def find_user_for_refresh
         header = request.headers["Authorization"]
         if header.present?
-          # Authorizationヘッダーがある場合: access tokenからuser_idを取得（有効期限切れでも許可）
+          # Authorizationヘッダーがある場合: access tokenからuser_idを取得（有効期限切れでも署名は検証）
           token = header.split(" ").last
-          decoded = JWT.decode(token, JsonWebToken::SECRET_KEY, false).first
+          decoded = JWT.decode(token, JsonWebToken::SECRET_KEY, true,
+            { algorithm: "HS256", verify_expiration: false }).first
           User.find_by(id: decoded["user_id"])
         else
           # ヘッダーがない場合（ページリロード後など）: bodyのuser_idを使用

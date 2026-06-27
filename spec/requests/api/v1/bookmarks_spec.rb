@@ -197,6 +197,26 @@ RSpec.describe "Api::V1::Bookmarks", type: :request do
       end
     end
 
+    context "異常系: 他ユーザーのブックマークを削除しようとした場合" do
+      let(:user) { create(:user) }
+      let(:other_user) { create(:user) }
+      let(:word) { create(:word) }
+
+      before do
+        create(:word_bookmark, user: other_user, word: word)
+        delete "/api/v1/words/#{word.id}/bookmark", headers: auth_headers(user)
+      end
+
+      it "404を返す（自分のブックマークにないため）" do
+        # 1. HTTPステータスのアサーション
+        expect(response.status).to eq 404
+        # 2. DBのアサーション（他ユーザーのブックマークは消えていない）
+        expect(WordBookmark.exists?(user: other_user, word: word)).to be true
+        # 3. 構造のアサーション
+        assert_response_schema_confirm(404)
+      end
+    end
+
     context "異常系: Authorizationヘッダーなし" do
       let(:word) { create(:word) }
 
