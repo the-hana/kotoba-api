@@ -5,6 +5,14 @@
 
 ## 2026-06-28
 
+### GeminiService PRレビュー追加対応
+
+- `JSON::ParserError` を明示的に rescue し、デバッグ可能なエラーメッセージを生成
+  - `rescue StandardError` に飲まれていたが、原因特定のためメッセージを具体化
+- `example_sentence` / `example_sentence_korean` の blank チェックを追加
+  - `AiContent` は `validates presence: true` を持つが `insert_all!` は validation をスキップするため GeminiService 側で事前検証が必要
+- `res.body` を 500 文字に切り詰めてログ肥大を防止
+
 ### GeminiService コードレビュー対応
 
 - `open_timeout = 10` を追加。TCP 接続ハングによるワーカースレッド無限ブロックを防止

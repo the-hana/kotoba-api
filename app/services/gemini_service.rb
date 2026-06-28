@@ -32,7 +32,7 @@ class GeminiService
     req.body = build_payload.to_json
 
     res = http.request(req)
-    raise "Gemini API error: #{res.code} #{res.body}" unless res.is_a?(Net::HTTPSuccess)
+    raise "Gemini API error: #{res.code} #{res.body.to_s.slice(0, 500)}" unless res.is_a?(Net::HTTPSuccess)
 
     JSON.parse(res.body)
   end
@@ -76,17 +76,24 @@ class GeminiService
     text = raw.dig("candidates", 0, "content", "parts", 0, "text")
     raise "Gemini レスポンスが空です" if text.blank?
 
-    data = JSON.parse(text)
+    data = begin
+      JSON.parse(text)
+    rescue JSON::ParserError => e
+      raise "Gemini レスポンスがJSONとして無効です: #{e.message}"
+    end
 
     raise "Gemini レスポンスにstoryがありません" if data["story"].blank?
 
     examples = data["examples"] || []
     words_result = @words.each_with_index.map do |word, i|
       ex = examples[i] || {}
+      if ex["example_sentence"].blank? || ex["example_sentence_korean"].blank?
+        raise "Gemini レスポンスのexampleが不足しています: index=#{i}"
+      end
       {
         word_id:                 word.id,
-        example_sentence:        ex["example_sentence"].to_s,
-        example_sentence_korean: ex["example_sentence_korean"].to_s
+        example_sentence:        ex["example_sentence"],
+        example_sentence_korean: ex["example_sentence_korean"]
       }
     end
 
