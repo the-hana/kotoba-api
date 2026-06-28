@@ -1,5 +1,4 @@
 require "net/http"
-require "json"
 
 class GeminiService
   API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
@@ -21,13 +20,15 @@ class GeminiService
   private
 
   def request_gemini
-    uri = URI("#{API_URL}?key=#{@api_key}")
+    uri = URI(API_URL)
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
+    http.open_timeout = 10
     http.read_timeout = 55
 
     req = Net::HTTP::Post.new(uri)
     req["Content-Type"] = "application/json"
+    req["x-goog-api-key"] = @api_key
     req.body = build_payload.to_json
 
     res = http.request(req)
@@ -77,8 +78,11 @@ class GeminiService
 
     data = JSON.parse(text)
 
+    raise "Gemini レスポンスにstoryがありません" if data["story"].blank?
+
+    examples = data["examples"] || []
     words_result = @words.each_with_index.map do |word, i|
-      ex = data["examples"][i] || {}
+      ex = examples[i] || {}
       {
         word_id:                 word.id,
         example_sentence:        ex["example_sentence"].to_s,

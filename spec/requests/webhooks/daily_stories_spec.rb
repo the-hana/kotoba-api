@@ -13,7 +13,7 @@ RSpec.describe "Webhooks::DailyStories", type: :request do
       story:        "テストストーリーです。",
       story_korean: "테스트 스토리입니다.",
       words: words.map do |w|
-        { word_id: w.id, example_sentence: "例文です。", example_sentence_korean: "예문입니다。" }
+        { word_id: w.id, example_sentence: "例文です。", example_sentence_korean: "예문입니다." }
       end
     }
     allow(DailyWordSelectorService).to receive(:call).and_return(words)

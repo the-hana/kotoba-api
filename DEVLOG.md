@@ -5,6 +5,14 @@
 
 ## 2026-06-28
 
+### GeminiService コードレビュー対応
+
+- `open_timeout = 10` を追加。TCP 接続ハングによるワーカースレッド無限ブロックを防止
+- API key を URL query param から `x-goog-api-key` ヘッダーに移動。ログへの漏洩を防ぐ
+- `data["examples"]` nil ガードを追加。`"examples"` キー自体が返らない場合の `NoMethodError` を防止
+- `data["story"].blank?` チェックを追加。空ストーリーのサイレント保存を防止
+- `require "json"` 削除（Rails が既にロード済み）
+
 ### DailyStory 生成パイプライン刷新: Lambda → Rails + Gemini 直接呼び出し
 
 - `GeminiService` を新規作成。単語10個を受け取り、日本語ストーリー・韓国語翻訳・単語別例文を一括生成
