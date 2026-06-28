@@ -3,6 +3,17 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
+## 2026-06-28
+
+### DailyStory 生成パイプライン刷新: Lambda → Rails + Gemini 直接呼び出し
+
+- `GeminiService` を新規作成。単語10個を受け取り、日本語ストーリー・韓国語翻訳・単語別例文を一括生成
+  - **設計判断 (Method B 採用)**: Lambda は EventBridge の trigger 役に専念し、Gemini API 呼び出しは Rails 側に移管した。Lambda で Gemini を呼ぶと Lambda の timeout / メモリ / エラーハンドリングが複雑になる。Rails 側に寄せることでトランザクション・エラーログ・retry ロジックを一元管理できる
+  - Gemini の JSON レスポンスは `word_id` を信頼せずインデックス順でマッピング。Gemini が存在しない ID を返しても問題なく動作する
+  - `read_timeout = 55s`（Gemini のレスポンス遅延対策）
+- `Webhooks::DailyStoriesController#create` を全面刷新。外部ペイロード受け取りをやめ `DailyWordSelectorService → GeminiService → DailyStoryCreationService` の内部パイプラインに統一
+- `webhooks/daily_stories_spec` を新アーキテクチャに合わせて書き直し。`DailyWordSelectorService` と `GeminiService` を stub して単体テストとして高速に実行できる構成に変更
+
 ## 2026-06-27
 
 ### セキュリティレビュー対応: JWT署名検証・認可テスト追加
