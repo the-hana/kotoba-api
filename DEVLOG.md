@@ -3,6 +3,33 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
+## 2026-06-28
+
+### GeminiService PRレビュー追加対応
+
+- `JSON::ParserError` を明示的に rescue し、デバッグ可能なエラーメッセージを生成
+  - `rescue StandardError` に飲まれていたが、原因特定のためメッセージを具体化
+- `example_sentence` / `example_sentence_korean` の blank チェックを追加
+  - `AiContent` は `validates presence: true` を持つが `insert_all!` は validation をスキップするため GeminiService 側で事前検証が必要
+- `res.body` を 500 文字に切り詰めてログ肥大を防止
+
+### GeminiService コードレビュー対応
+
+- `open_timeout = 10` を追加。TCP 接続ハングによるワーカースレッド無限ブロックを防止
+- API key を URL query param から `x-goog-api-key` ヘッダーに移動。ログへの漏洩を防ぐ
+- `data["examples"]` nil ガードを追加。`"examples"` キー自体が返らない場合の `NoMethodError` を防止
+- `data["story"].blank?` チェックを追加。空ストーリーのサイレント保存を防止
+- `require "json"` 削除（Rails が既にロード済み）
+
+### DailyStory 生成パイプライン刷新: Lambda → Rails + Gemini 直接呼び出し
+
+- `GeminiService` を新規作成。単語10個を受け取り、日本語ストーリー・韓国語翻訳・単語別例文を一括生成
+  - **設計判断 (Method B 採用)**: Lambda は EventBridge の trigger 役に専念し、Gemini API 呼び出しは Rails 側に移管した。Lambda で Gemini を呼ぶと Lambda の timeout / メモリ / エラーハンドリングが複雑になる。Rails 側に寄せることでトランザクション・エラーログ・retry ロジックを一元管理できる
+  - Gemini の JSON レスポンスは `word_id` を信頼せずインデックス順でマッピング。Gemini が存在しない ID を返しても問題なく動作する
+  - `read_timeout = 55s`（Gemini のレスポンス遅延対策）
+- `Webhooks::DailyStoriesController#create` を全面刷新。外部ペイロード受け取りをやめ `DailyWordSelectorService → GeminiService → DailyStoryCreationService` の内部パイプラインに統一
+- `webhooks/daily_stories_spec` を新アーキテクチャに合わせて書き直し。`DailyWordSelectorService` と `GeminiService` を stub して単体テストとして高速に実行できる構成に変更
+
 ## 2026-06-27
 
 ### セキュリティレビュー対応: JWT署名検証・認可テスト追加
