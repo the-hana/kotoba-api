@@ -12,6 +12,10 @@
   - CloudWatch の ECS ログで `Quota exceeded ... limit: 0, model: gemini-2.0-flash` を確認して特定
   - `gemini-3.5-flash` は無料枠が生きているモデルとして採用
 
+### msgpackをCVE対応の1.8.3に更新
+
+- CI の `bundler-audit` が `msgpack 1.8.1` の `CVE-2026-54522`（Use-After-Free）を検出しビルドが失敗していたため `bundle update msgpack` で `1.8.3` に更新
+
 ## 2026-06-28
 
 ### GeminiService PRレビュー追加対応
