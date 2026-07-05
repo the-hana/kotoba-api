@@ -3,6 +3,15 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
+## 2026-07-05
+
+### GeminiService のモデルを gemini-3.5-flash に変更
+
+- `GeminiService::API_URL` の `gemini-2.0-flash` を `gemini-3.5-flash` に変更
+  - `gemini-2.0-flash` が deprecated 済みで無料枠 quota が 0 になっており、DailyStory 生成が毎日 429 エラーで失敗していた
+  - CloudWatch の ECS ログで `Quota exceeded ... limit: 0, model: gemini-2.0-flash` を確認して特定
+  - `gemini-3.5-flash` は無料枠が生きているモデルとして採用
+
 ## 2026-06-28
 
 ### GeminiService PRレビュー追加対応

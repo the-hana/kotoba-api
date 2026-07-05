@@ -1,7 +1,7 @@
 require "net/http"
 
 class GeminiService
-  API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+  API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent"
 
   def self.call(words)
     new(words).call
