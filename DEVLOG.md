@@ -3,7 +3,16 @@
 コミットごとに作業内容を記録。最新のエントリが上。
 設計判断・トレードオフを含む作業は必ず記録。些細な修正は省略可。
 
-## 2026-07-05
+## 2026-08-06
+
+### bundler-audit で検出された複数gemのCVE対応
+
+- `activestorage` 8.1.3 → 8.1.3.1（任意ファイル読み取り・RCEの可能性、CVE-2026-66066）。パッチが Rails 8.1.3.1 全体リリースだったため rails 一式が追従
+- `json` 2.19.7 → 2.21.2（heap buffer overflow、CVE-2026-54696）
+- `loofah` 2.25.1 → 2.25.2（`javascript:` URI サニタイズ回避×2件 + SVG href 制限回避）
+- `rails-html-sanitizer` 1.7.0 → 1.7.1（XSSの可能性）
+- `websocket-driver` 0.8.0 → 0.8.2（メモリ枯渇・DoS×4件、うち1件 Criticality High）
+- `bundle exec rspec` 86 examples 0 failures / `bundler-audit check` No vulnerabilities found を確認
 
 ### GeminiService のモデルを gemini-3.5-flash に変更
 
