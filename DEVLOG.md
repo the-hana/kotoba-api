@@ -14,6 +14,8 @@
 - `websocket-driver` 0.8.0 → 0.8.2（メモリ枯渇・DoS×4件、うち1件 Criticality High）
 - `bundle exec rspec` 86 examples 0 failures / `bundler-audit check` No vulnerabilities found を確認
 
+## 2026-07-05
+
 ### GeminiService のモデルを gemini-3.5-flash に変更
 
 - `GeminiService::API_URL` の `gemini-2.0-flash` を `gemini-3.5-flash` に変更
